@@ -1,85 +1,110 @@
 using TravelZ.Api.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using TravelZ.Core.Models;
+using TravelZ.Core.Interfaces;
+using TravelZ.Core.Services;
 
-var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-
-//builder.Services.AddOpenApi();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(opt =>
+void ConfigureSwagger(IServiceCollection services)
 {
-	opt.SwaggerDoc("v1", new OpenApiInfo { Title = "MyAPI", Version = "v1" });
-	opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    services.AddSwaggerGen(opt =>
 	{
-		In = ParameterLocation.Header,
-		Description = "Please enter token",
-		Name = "Authorization",
-		Type = SecuritySchemeType.Http,
-		BearerFormat = "JWT",
-		Scheme = "bearer"
-	});
-
-	opt.AddSecurityRequirement(new OpenApiSecurityRequirement
-	{
+		opt.SwaggerDoc("v1", new OpenApiInfo { Title = "MyAPI", Version = "v1" });
+		opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
 		{
-			new OpenApiSecurityScheme
+			In = ParameterLocation.Header,
+			Description = "Please enter token",
+			Name = "Authorization",
+			Type = SecuritySchemeType.Http,
+			BearerFormat = "JWT",
+			Scheme = "bearer"
+		});
+
+		opt.AddSecurityRequirement(new OpenApiSecurityRequirement
+		{
 			{
-				Reference = new OpenApiReference
+				new OpenApiSecurityScheme
 				{
-					Type=ReferenceType.SecurityScheme,
-					Id="Bearer"
-				}
-			},
-			new string[]{}
-		}
+					Reference = new OpenApiReference
+					{
+						Type=ReferenceType.SecurityScheme,
+						Id="Bearer"
+					}
+				},
+				new string[]{}
+			}
+		});
 	});
-});
-builder.Services.AddDbContext<ApplicationDbContext>();
-builder.Services.AddIdentityApiEndpoints<IdentityUser>().AddEntityFrameworkStores<ApplicationDbContext>();
-builder.Services.AddAuthorization();
-/* "email": "admin@travelz.com",
-  "password": "Admin123!" */
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
-
-app.MapGroup("/identity").MapIdentityApi<IdentityUser>();
-
-var summaries = new[]
+void ConfigureJwt(IServiceCollection services, IConfiguration config)
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+	services.AddAuthentication(options =>
+	{
+		options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+		options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+	})
+	.AddJwtBearer(options =>
+	{
+		var jwtKey = config["Jwt:Key"];
+		var jwtIssuer = config["Jwt:Issuer"];
+		var jwtAudience = config["Jwt:Audience"];
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.RequireAuthorization()
-.WithName("GetWeatherForecast")
-.WithOpenApi();
-
-app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+		options.TokenValidationParameters = new TokenValidationParameters
+		{
+			ValidateIssuer = true,
+			ValidateAudience = true,
+			ValidateLifetime = true,
+			ValidateIssuerSigningKey = true,
+			ValidIssuer = jwtIssuer,
+			ValidAudience = jwtAudience,
+			IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+		};
+		options.Events = new JwtBearerEvents
+		{
+			OnChallenge = context =>
+			{
+				context.HandleResponse();
+				context.Response.StatusCode = 401;
+				return Task.CompletedTask;
+			}
+		};
+	});
 }
+
+async Task StartApp(string[] args)
+{
+	var builder = WebApplication.CreateBuilder(args);
+
+	builder.Services.AddEndpointsApiExplorer();
+	ConfigureSwagger(builder.Services);
+	builder.Services.AddDbContext<ApplicationDbContext>();
+	builder.Services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
+	ConfigureJwt(builder.Services, builder.Configuration);
+	builder.Services.AddAuthorization();
+	builder.Services.AddSingleton<IEmailSender<User>, EmailSender>();
+	builder.Services.AddControllers();
+	builder.Services.AddAutoMapper(typeof(TravelZ.Core.Mappings.UserProfile).Assembly);
+	builder.Services.AddScoped<IUserService, UserService>();
+
+	var app = builder.Build();
+
+	if (app.Environment.IsDevelopment())
+	{
+		await DatabaseSeeder.Seed(app.Services);
+		app.UseSwagger();
+		app.UseSwaggerUI();
+	}
+
+	app.UseHttpsRedirection();
+	app.UseAuthentication();
+	app.UseAuthorization();
+	app.MapControllers();
+
+	app.Run();
+}
+
+await StartApp(args);
