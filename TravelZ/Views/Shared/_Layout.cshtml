@@ -26,6 +26,8 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
+                        @inject List<TravelZ.Models.MenuItem> MenuItems
+                        @await Html.PartialAsync("_AuthNavPartial", MenuItems)
                     </ul>
                 </div>
             </div>

@@ -6,5 +6,6 @@ namespace TravelZ.Core.Interfaces;
 public interface IUserService
 {
     Task<string?> Login(LoginRequest request);
-    Task<IEnumerable<UserDto>> GetAllUsersAsync();
+    Task<UserDto?> GetCurrentUser();
+    Task<IEnumerable<UserDto>> GetAllUsers();
 }

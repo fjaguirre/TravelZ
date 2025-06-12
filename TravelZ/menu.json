@@ -1,0 +1,4 @@
+[
+  { "text": "Users", "controller": "Account", "action": "GetUsers", "roles": [1] },
+  { "text": "Profile", "controller": "Account", "action": "Profile", "roles": [1, 2, 3, 4] }
+]

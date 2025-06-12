@@ -1,4 +1,6 @@
-﻿namespace TravelZ.Core.DTOs
+﻿using TravelZ.Core.Types;
+
+namespace TravelZ.Core.DTOs
 {
     public class UserDto
     {
@@ -8,6 +10,6 @@
         public required string LastName { get; set; }
         public required string Email { get; set; }
         public string? PhoneNumber { get; set; }
-        public IList<string> Roles { get; set; } = new List<string>();
+        public IList<RoleType> Roles { get; set; } = new List<RoleType>();
     }
 }

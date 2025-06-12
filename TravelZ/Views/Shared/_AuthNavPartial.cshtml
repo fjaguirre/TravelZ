@@ -1,0 +1,34 @@
+﻿@model List<TravelZ.Models.MenuItem>
+@using System.Text.Json
+@using TravelZ.Core.DTOs
+@using TravelZ.Core.Types
+@{
+    var token = Context.Session.GetString("JWToken");
+    var isLoggedIn = !string.IsNullOrEmpty(token);
+    var userInfoJson = isLoggedIn ? Context.Session.GetString("UserInfo") : null;
+    var user = !string.IsNullOrEmpty(userInfoJson) ? JsonSerializer.Deserialize<UserDto>(userInfoJson) : null;
+}
+@foreach (var menuItem in Model)
+{
+    if (user != null && menuItem.Roles.Any(r => user.Roles.Contains(r)))
+    {
+        <li class="nav-item">
+            <a class="nav-link text-dark" asp-controller="@menuItem.Controller" asp-action="@menuItem.Action">@menuItem.Text</a>
+        </li>
+    }
+}
+@if (isLoggedIn)
+{
+    <li class="nav-item">
+        <form asp-action="Logout" asp-controller="Account" method="post" class="d-inline">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="nav-link btn btn-link text-dark">Logout</button>
+        </form>
+    </li>
+}
+else
+{
+    <li class="nav-item">
+        <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">Login</a>
+    </li>
+}

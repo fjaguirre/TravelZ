@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TravelZ.Core.Requests;
 using TravelZ.Core.Interfaces;
+using TravelZ.Core.Responses;
 
 
 namespace TravelZ.Api.Controllers;
@@ -23,16 +24,27 @@ public class AccountController : ControllerBase
     {
         var tokenString = await _userService.Login(request);
         if (tokenString == null)
-            return Unauthorized(new { Message = "Invalid credentials" });
+            return Unauthorized(new LoginResponse { Message = "Invalid credentials" });
 
-        return Ok(new { Token = tokenString });
+        return Ok(new LoginResponse { Token = tokenString });
+    }
+
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<IActionResult> GetCurrentUser()
+    {
+        var user = await _userService.GetCurrentUser();
+        if (user == null)
+            return NotFound(new { Message = "User not found" });
+
+        return Ok(user);
     }
 
     [HttpGet("users")]
     [Authorize(Roles = "administrator")]
     public async Task<IActionResult> GetUsers()
     {
-        var users = await _userService.GetAllUsersAsync();
+        var users = await _userService.GetAllUsers();
         return Ok(users);
     }
 
