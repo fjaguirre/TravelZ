@@ -7,6 +7,7 @@ using System.Text;
 using TravelZ.Core.Models;
 using TravelZ.Core.Interfaces;
 using TravelZ.Core.Services;
+using TravelZ.Api.Repositories;
 
 void ConfigureSwagger(IServiceCollection services)
 {
@@ -89,6 +90,8 @@ async Task StartApp(string[] args)
 	builder.Services.AddControllers();
 	builder.Services.AddAutoMapper(typeof(TravelZ.Core.Mappings.UserProfile).Assembly);
 	builder.Services.AddScoped<IUserService, UserService>();
+	builder.Services.AddScoped<IPropertyService, PropertyService>();
+	builder.Services.AddScoped<IPropertyRepository, PropertyRepository>();
 
 	var app = builder.Build();
 

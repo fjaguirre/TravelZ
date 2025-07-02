@@ -10,7 +10,7 @@
 }
 @foreach (var menuItem in Model)
 {
-    if (user != null && menuItem.Roles.Any(r => user.Roles.Contains(r)))
+    if (user != null && menuItem.Roles.Any(r => user.Roles.Any(ur => ur.Type == r)))
     {
         <li class="nav-item">
             <a class="nav-link text-dark" asp-controller="@menuItem.Controller" asp-action="@menuItem.Action">@menuItem.Text</a>

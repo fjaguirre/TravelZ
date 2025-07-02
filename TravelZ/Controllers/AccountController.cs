@@ -68,6 +68,7 @@ public class AccountController : BaseController
     public async Task<IActionResult> Profile()
     {
         var user = await _apiClientService.GetAsync<UserDto>("/account/me");
+        ViewBag.IsProfile = true;
         if (user != null)
             return View(user);
 
@@ -85,6 +86,54 @@ public class AccountController : BaseController
 
         ModelState.AddModelError("", "Failed to retrieve users.");
         return View(new List<UserDto>());
+    }
 
+    [HttpGet]
+    [Route("account/user/{id}")]
+    public async Task<IActionResult> GetUserById(string id)
+    {
+        var user = await _apiClientService.GetAsync<UserDto>($"/account/users/{id}");
+        ViewBag.IsProfile = false;
+        if (user != null)
+            return View("Profile", user);
+
+        ModelState.AddModelError("", "User not found.");
+        return View("Profile", null);
+    }
+
+    [HttpGet]
+    [Route("account/user/edit/{id?}")]
+    public async Task<IActionResult> Edit(string? id)
+    {
+        string url = string.IsNullOrEmpty(id) ? "/account/me" : $"/account/users/{id}";
+        UserDto? user = await _apiClientService.GetAsync<UserDto>(url);
+        if (user == null)
+            return NotFound();
+        ViewBag.EditId = id;
+        ViewBag.IsProfile = string.IsNullOrEmpty(id);
+        return View(user);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Route("account/user/edit/{id?}")]
+    public async Task<IActionResult> Edit(UserDto model, string? id)
+    {
+        if (!ModelState.IsValid)
+            return View(model);
+
+        string url = string.IsNullOrEmpty(id) ? "/account/me" : $"/account/users/{id}";
+        UserDto? result = await _apiClientService.PutAsync<UserDto>(url, model);
+
+        if (result != null)
+        {
+            if (string.IsNullOrEmpty(id))
+                return RedirectToAction("Profile");
+            else
+                return RedirectToAction("GetUserById", new { id = id });
+        }
+
+        ModelState.AddModelError("", "Failed to update user.");
+        return View(model);
     }
 }

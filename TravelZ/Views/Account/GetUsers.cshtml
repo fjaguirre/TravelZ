@@ -4,7 +4,7 @@
     ViewData["Title"] = "Users";
 }
 
-<h1>GetUsers</h1>
+<h1>Users</h1>
 
 <p>
     <a asp-action="Create">Create New</a>
@@ -13,9 +13,6 @@
 <table class="table">
     <thead>
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Id)
-            </th>
             <th>
                 @Html.DisplayNameFor(model => model.UserName)
             </th>
@@ -41,9 +38,6 @@
 @foreach (var item in Model) {
         <tr>
             <td>
-                @Html.DisplayFor(modelItem => item.Id)
-            </td>
-            <td>
                 @Html.DisplayFor(modelItem => item.UserName)
             </td>
             <td>
@@ -59,12 +53,11 @@
                 @Html.DisplayFor(modelItem => item.PhoneNumber)
             </td>
             <td>
-                @(item.Roles != null ? string.Join(", ", item.Roles) : "")
+                @(item.Roles != null ? string.Join(", ", item.Roles.Select(r => r.Name)) : "")
             </td>
             <td>
-                @Html.ActionLink("Edit", "Edit", new { /* id=item.PrimaryKey */ }) |
-                @Html.ActionLink("Details", "Details", new { /* id=item.PrimaryKey */ }) |
-                @Html.ActionLink("Delete", "Delete", new { /* id=item.PrimaryKey */ })
+                @Html.ActionLink("Edit", "Edit", new { id = item.Id }) |
+                @Html.ActionLink("Details", "GetUserById", new { id=item.Id })
             </td>
         </tr>
 }

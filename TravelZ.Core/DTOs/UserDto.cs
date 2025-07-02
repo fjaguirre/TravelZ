@@ -10,6 +10,6 @@ namespace TravelZ.Core.DTOs
         public required string LastName { get; set; }
         public required string Email { get; set; }
         public string? PhoneNumber { get; set; }
-        public IList<RoleType> Roles { get; set; } = new List<RoleType>();
+        public IList<RoleDto> Roles { get; set; } = new List<RoleDto>();
     }
 }

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using TravelZ.Core.Requests;
 using TravelZ.Core.Interfaces;
 using TravelZ.Core.Responses;
-
+using TravelZ.Core.DTOs;
 
 namespace TravelZ.Api.Controllers;
 
@@ -40,12 +40,51 @@ public class AccountController : ControllerBase
         return Ok(user);
     }
 
+    [HttpPut("me")]
+    [Authorize]
+    public async Task<IActionResult> UpdateCurrentUser([FromBody] UserDto userDto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var updatedUser = await _userService.UpdateCurrentUser(userDto);
+        if (updatedUser == null)
+            return BadRequest(new { Message = "Failed to update user" });
+
+        return Ok(updatedUser);
+    }
+
+    [HttpGet("users/{userId}")]
+    [Authorize(Roles = "administrator")]
+    public async Task<IActionResult> GetUserById(string userId)
+    {
+        var user = await _userService.GetUserById(userId);
+        if (user == null)
+            return NotFound(new { Message = "User not found" });
+
+        return Ok(user);
+    }
+
     [HttpGet("users")]
     [Authorize(Roles = "administrator")]
     public async Task<IActionResult> GetUsers()
     {
         var users = await _userService.GetAllUsers();
         return Ok(users);
+    }
+
+    [HttpPut("users/{userId}")]
+    [Authorize(Roles = "administrator")]
+    public async Task<IActionResult> UpdateUser(string userId, [FromBody] UserDto userDto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var updatedUser = await _userService.UpdateUser(userId, userDto);
+        if (updatedUser == null)
+            return NotFound(new { Message = "User not found or update failed" });
+
+        return Ok(updatedUser);
     }
 
 }

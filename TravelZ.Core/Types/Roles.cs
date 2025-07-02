@@ -46,7 +46,7 @@ namespace TravelZ.Core.Types
             }
         }
 
-        public static RoleType GetRoleByName(string name)
+        public static RoleType GetTypeByName(string name)
         {
             if (string.IsNullOrEmpty(name))
                 return RoleType.Unspecified;

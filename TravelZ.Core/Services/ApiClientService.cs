@@ -38,11 +38,25 @@ public class ApiClientService : IApiClientService
     public async Task<T?> PostAsync<T>(string url, object data)
     {
         var client = CreateClientWithToken();
-        var content = new StringContent(JsonSerializer.Serialize(data), System.Text.Encoding.UTF8, "application/json");
+        var content = new StringContent(JsonSerializer.Serialize(data), Encoding.UTF8, "application/json");
         var response = await client.PostAsync(url, content);
         if (!response.IsSuccessStatusCode)
         {
             LogError("POST", url, response);
+            return default;
+        }
+        var json = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<T>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    }
+
+    public async Task<T?> PutAsync<T>(string url, object data)
+    {
+        var client = CreateClientWithToken();
+        var content = new StringContent(JsonSerializer.Serialize(data), Encoding.UTF8, "application/json");
+        var response = await client.PutAsync(url, content);
+        if (!response.IsSuccessStatusCode)
+        {
+            LogError("PUT", url, response);
             return default;
         }
         var json = await response.Content.ReadAsStringAsync();

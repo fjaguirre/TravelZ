@@ -42,11 +42,37 @@ public class UserService : IUserService
     public async Task<UserDto?> GetCurrentUser()
     {
         var user = await _userManager.GetUserAsync(_signInManager.Context.User);
-        Console.WriteLine($"Current user: {user?.Email}");
         if (user == null)
             return null;
 
         return await BuildDto(user);
+    }
+
+    public async Task<UserDto?> UpdateCurrentUser(UserDto userDto)
+    {
+        var user = await _userManager.GetUserAsync(_signInManager.Context.User);
+        if (user == null)
+            return null;
+
+        return await UpdateUserInternal(user, userDto);
+    }
+
+    public async Task<UserDto?> GetUserById(string userId)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+            return null;
+
+        return await BuildDto(user);
+    }
+
+    public async Task<UserDto?> UpdateUser(string userId, UserDto userDto)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+            return null;
+
+        return await UpdateUserInternal(user, userDto);
     }
 
     public async Task<IEnumerable<UserDto>> GetAllUsers()
@@ -63,11 +89,24 @@ public class UserService : IUserService
         return userDtos;
     }
 
+    private async Task<UserDto?> UpdateUserInternal(User user, UserDto userDto)
+    {
+        user.FirstName = userDto.FirstName;
+        user.LastName = userDto.LastName;
+        user.PhoneNumber = userDto.PhoneNumber;
+
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+            return null;
+
+        return await BuildDto(user);
+    }
+
     private async Task<UserDto> BuildDto(User user)
     {
         var roles = await _userManager.GetRolesAsync(user);
         var dto = _mapper.Map<UserDto>(user);
-        dto.Roles = roles.Select(RoleName.GetRoleByName).ToList();
+        dto.Roles = roles.Select(r => new RoleDto { Name = r, Type = RoleName.GetTypeByName(r) }).ToList();
         return dto;
     }
 }

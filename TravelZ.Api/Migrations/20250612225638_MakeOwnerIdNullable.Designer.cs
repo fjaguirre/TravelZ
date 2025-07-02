@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TravelZ.Api.Data;
 
@@ -10,9 +11,11 @@ using TravelZ.Api.Data;
 namespace TravelZ.Api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250612225638_MakeOwnerIdNullable")]
+    partial class MakeOwnerIdNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.5");
@@ -199,40 +202,6 @@ namespace TravelZ.Api.Migrations
                     b.HasIndex("OwnerId");
 
                     b.ToTable("Properties");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1000,
-                            Address = "123 Lake St",
-                            AirConditioning = true,
-                            Bathrooms = 2,
-                            Beds = 3,
-                            Country = "USA",
-                            Description = "A beautiful house by the lake.",
-                            Name = "Lake House",
-                            Parking = true,
-                            PetFriendly = true,
-                            Pools = 1,
-                            TVs = 2,
-                            Wifi = true
-                        },
-                        new
-                        {
-                            Id = 1001,
-                            Address = "456 Mountain Rd",
-                            AirConditioning = false,
-                            Bathrooms = 1,
-                            Beds = 2,
-                            Country = "USA",
-                            Description = "Cozy cabin in the mountains.",
-                            Name = "Mountain Cabin",
-                            Parking = true,
-                            PetFriendly = false,
-                            Pools = 0,
-                            TVs = 1,
-                            Wifi = false
-                        });
                 });
 
             modelBuilder.Entity("TravelZ.Core.Models.User", b =>
